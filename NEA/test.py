@@ -1,33 +1,46 @@
-from math import pi as pi
-from math import e as e
-import os
-import face_recognition
-import cv2
-'''x = y = 0
+"""x = y = 0
 total = 0
 
-for i in range (x-7, x+8):
-    for z in range (y-7, y+8):
+for i in range(x-10, x+11):
+    for z in range(y-10, y+11):
         offsetx = abs(0 - i)
         offsety = abs(0-z)
-        weight = ((1 / (98 * pi)) * e ** (-(offsetx ** 2 + offsety ** 2) / 98)) / 0.513276455725204
+        weight = ((1 / (98 * pi)) * e ** (-(offsetx ** 2 + offsety ** 2) / 98))
         total += weight
 
-print(total)'''
-'''face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+print(total)"""
+'''from PIL import Image
+import matlab.engine
+import tensorflow
 
-main_image = face_recognition.load_image_file('./main/main.jpg')
+eng = matlab.engine.start_matlab()
+filename = str('faceavoid.jpg')
+size = float(8)
+eng.gaussianblur(filename, size, nargout=0)
 
-# Find faces in test image
-face_locations = face_recognition.face_locations(main_image)
-gray = cv2.cvtColor(main_image, cv2.COLOR_BGR2GRAY)
-faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-face_loc = []
-for (x, y, w, h) in faces:
-    face_loc.append((x, y, x+w, y+h))
-    cv2.rectangle(main_image, (x, y), (x + w, y + h), (255, 0, 0), 2)
-print(face_loc)
-print(face_location'''
+eng.quit()'''
+from PIL import Image
+import matlab.engine
+import os
+import face_recognition
 
-array = [1, 2, 3]
-print(len(array))
+'''eng = matlab.engine.start_matlab()
+image = face_recognition.load_image_file("faceavoid.jpg")
+pil_image = Image.fromarray(image)
+face = pil_image.crop((90, 90, 210, 210))
+face.save('./temp/before.jpg')
+name = '/Users/antonzhulkovskiy/Desktop/NEA/temp/before.jpg'
+eng.gaussianblur(name, 10.00, nargout=0)
+# Calls the blur function
+blurredface = Image.open('./temp/face.jpg')
+blurredfacefinal = blurredface.crop((10,10,110,110))
+# Pastes the blurred face back onto the image
+pil_image.paste(blurredfacefinal, (100, 100))
+os.remove("./temp/face.jpg")
+os.remove('./temp/before.jpg')
+pil_image.show()
+eng.quit()'''
+face = Image.open('faceavoid.jpg')
+face.save("./temp/before.jpg")
+name = os.path.realpath("./temp/before.jpg")
+print(name)

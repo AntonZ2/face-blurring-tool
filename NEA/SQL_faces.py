@@ -12,22 +12,19 @@ def insert_images(filepaths):
     for i in filepaths:
         with open(i, "rb") as File:
             binarydata = File.read()
-        MyCursor.execute("""INSERT INTO Images (face) VALUES(:binarydata)""", (binarydata, ))
+        sqlite_insert_blob_query = """ INSERT INTO Images (face) VALUES (?)"""
+        MyCursor.execute(sqlite_insert_blob_query, (binarydata, ))
         MyDB.commit()
 
 
 def retrieve_images():
-    sqlstatement2 = "SELECT * FROM Images"
+    sqlstatement2 = "SELECT face FROM Images"
     MyCursor.execute(sqlstatement2)
     result = MyCursor.fetchall()
-    for i in result[1]:
-        if type(i) != int:
-            image = f"./main/{}.jpg"
-            with open(image, "wb") as File:
-                File.write(i)
-                File.close()
+    for i in result:
+        image = f"./ignore/saved{result.index(i)}.jpg"
+        with open(image, "wb") as File:
+            File.write(i[0])
+            File.close()
 
 
-paths = ['jeff.jpeg', '0.jpg']
-# insert_images(paths)
-retrieve_images()

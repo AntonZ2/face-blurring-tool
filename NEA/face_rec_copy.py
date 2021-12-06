@@ -1,10 +1,8 @@
 import face_recognition
 from PIL import Image
 import os
+from blurring_algorithm import Blur
 import cv2
-import matlab.engine
-
-eng = matlab.engine.start_matlab()
 
 
 # Function to detect all the faces in the main image
@@ -31,21 +29,20 @@ def facelocatephoto(intense):
     face_locations = face_recognition.face_locations(main_image)
     # creates encodings for the faces to later be compared with the encodings for faces to be ignored
     face_encodings = face_recognition.face_encodings(main_image, face_locations)
-
+    
     # Convert to PIL format to allow image formatting and comparison of encodings
     pil_image = Image.fromarray(main_image)
-
+    
     # Runs the function to blur the faces
-    blurfaces(pil_image, face_locations, face_encodings, ignore_face_encodings, int(intense))
+    blurfaces(pil_image, face_locations, face_encodings, ignore_face_encodings, intense)
 
-    # saves completed image in temporary file
-    storeimage(pil_image)
-
+    # TESTING
+    showimage(pil_image)
+    
     # Delete main file and ignore files to prevent accidental use in future
     deletefiles()
 
-
-def facelocatevideo(intense):
+def facelocatevideo():
     # List that will contain all faces that should NOT be blurred
     ignore_face_encodings = []
     # For loop to append all faces provided by user to be ignored into ignore face list
@@ -60,83 +57,32 @@ def facelocatevideo(intense):
             # Except statement to go to next image if no face is detected
             except IndexError:
                 pass
-    video = cv2.VideoCapture("./main/main.mp4")
+    video = cv2.VideoCapture('main.mp4')
 
-    frame_width = int(video.get(3))
-    frame_height = int(video.get(4))
-    frame_size = (frame_width, frame_height)
-    fps = int(video.get(5))
-    output = cv2.VideoWriter('./temp/finished.mp4',
-                             cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), fps,
-                             frame_size)
-
-    while video.isOpened():
+    while True:
         out, image = video.read()
 
-        if not out:
-            break
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Find the coordinates of each face in the main image
-        face_locations = face_recognition.face_locations(image)
-        # creates encodings for the faces to later be compared with the encodings for faces to be ignored
-        face_encodings = face_recognition.face_encodings(image, face_locations)
-
-        # Convert to PIL format to allow image formatting and comparison of encodings
-        pil_image = Image.fromarray(image)
-
-        # Runs the function to blur the faces
-        blurfaces(pil_image, face_locations, face_encodings, ignore_face_encodings, int(intense))
-
-        pil_image.save("./temp/video.jpg")
-
-        frame = cv2.imread("./temp/video.jpg")
-
-        output.write(frame)
-
-        os.remove("./temp/video.jpg")
-
-    video.release()
-    output.release()
-
-    # Delete main file and ignore files to prevent accidental use in future
-    deletefiles()
 
 
 # Function to blur faces
 def blurfaces(pil_image, face_locations, face_encodings, ignore_face_encodings, intense):
+
     # Loop through faces in main image
-    for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+    for(top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
         # Compare the faces detected in main image with the faces in list of faces to ignore
         matches = face_recognition.compare_faces(ignore_face_encodings, face_encoding, tolerance=0.6)
         # if current face does not match faces in faces to ignore list blurring is applied
         if True not in matches:
-            # Checks to ensure face blurring algorithm does not go outside image
-            width, height = pil_image.size
-            if top < intense:
-                top = intense
-            elif bottom > height - intense:
-                bottom = height - intense
-            if left < intense:
-                left = intense
-            elif right > width - intense:
-                right = width - intense
-            face = pil_image.crop((left - intense, top - intense, right + intense, bottom + intense))
-            face.save("./temp/before.jpg")
-            name = os.path.realpath("./temp/before.jpg") 
-            eng.gaussianblur(name, float(intense), nargout=0)
             # Calls the blur function
-            blurredface = Image.open("./temp/face.jpg")
-            blurredfacefinal = blurredface.crop((intense, intense, (right - left), (bottom - top + intense)))
+            faceblur = Blur(x=left, y=top, x2=right, y2=bottom, intensity=intense)
+            blurredface = faceblur.photoblur()
             # Pastes the blurred face back onto the image
-            pil_image.paste(blurredfacefinal, (left, top))
-            os.remove("./temp/face.jpg")
-            os.remove("./temp/before.jpg")
+            pil_image.paste(blurredface, (left, top))
 
 
 # Function to delete files after program has been executed
 def deletefiles():
-    eng.quit()
     # For loop through all images to be ignored
     for f in os.listdir("ignore"):
         # Ignores all system files
@@ -144,14 +90,9 @@ def deletefiles():
             # deletes the image file
             os.remove(f"./ignore/{f}")
     # Delete the main image file
-    try:
-        os.remove("./main/main.jpg")
-        # os.remove("./temp/finished.jpg")
-    except FileNotFoundError:
-        os.remove("./main/main.mp4")
-        # os.remove("./temp/finished.mp4")
+    os.remove("./main/main.jpg")
 
 
 # TESTING
-def storeimage(image):
-    image.save("./temp/finished.jpg")
+def showimage(image):
+    image.show()
