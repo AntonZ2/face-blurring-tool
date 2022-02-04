@@ -1,4 +1,3 @@
-
 function gaussianblur(ImgName, sz)
     Img=imread(ImgName);
     %Read an Image
@@ -19,12 +18,14 @@ function gaussianblur(ImgName, sz)
         %Convolution
         for i = 1:size(I,1)-width
             for j = 1:size(I,2)-height
-                for x = 1:3
-                    p=i+width;
-                    q=j+height;
-                    temp = I(i:p,j:q,x).*Kernel;
-                    imar(i,j,x)=sum(temp(:));
-                end
+                p=i+width;
+                q=j+height;
+                temp1 = I(i:p,j:q,1).*Kernel;
+                temp2 = I(i:p,j:q,2).*Kernel;
+                temp3 = I(i:p,j:q,3).*Kernel;
+                imar(i,j,1)=sum(temp1(:));
+                imar(i,j,2)=sum(temp2(:));
+                imar(i,j,3)=sum(temp3(:));
             end
         end
     %Image without Noise after Gaussian blur

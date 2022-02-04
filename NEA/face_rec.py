@@ -3,6 +3,9 @@ from PIL import Image
 import os
 import cv2
 import matlab.engine
+import shutil
+from tkinter.filedialog import asksaveasfilename
+
 
 eng = matlab.engine.start_matlab()
 
@@ -39,10 +42,7 @@ def facelocatephoto(intense):
     blurfaces(pil_image, face_locations, face_encodings, ignore_face_encodings, int(intense))
 
     # saves completed image in temporary file
-    storeimage(pil_image)
-
-    # Delete main file and ignore files to prevent accidental use in future
-    deletefiles()
+    pil_image.save("./temp/finished.jpg")
 
 
 def facelocatevideo(intense):
@@ -99,9 +99,6 @@ def facelocatevideo(intense):
     video.release()
     output.release()
 
-    # Delete main file and ignore files to prevent accidental use in future
-    deletefiles()
-
 
 # Function to blur faces
 def blurfaces(pil_image, face_locations, face_encodings, ignore_face_encodings, intense):
@@ -127,7 +124,7 @@ def blurfaces(pil_image, face_locations, face_encodings, ignore_face_encodings, 
             eng.gaussianblur(name, float(intense), nargout=0)
             # Calls the blur function
             blurredface = Image.open("./temp/face.jpg")
-            blurredfacefinal = blurredface.crop((intense, intense, (right - left), (bottom - top + intense)))
+            blurredfacefinal = blurredface.crop((intense, intense, (right - left + intense), (bottom - top + intense)))
             # Pastes the blurred face back onto the image
             pil_image.paste(blurredfacefinal, (left, top))
             os.remove("./temp/face.jpg")
@@ -135,8 +132,9 @@ def blurfaces(pil_image, face_locations, face_encodings, ignore_face_encodings, 
 
 
 # Function to delete files after program has been executed
-def deletefiles():
-    eng.quit()
+def deletefiles(pos):
+#    if pos == 'final':
+#        eng.quit()
     # For loop through all images to be ignored
     for f in os.listdir("ignore"):
         # Ignores all system files
@@ -146,12 +144,21 @@ def deletefiles():
     # Delete the main image file
     try:
         os.remove("./main/main.jpg")
-        # os.remove("./temp/finished.jpg")
+        os.remove("./temp/finished.jpg")
     except FileNotFoundError:
-        os.remove("./main/main.mp4")
-        # os.remove("./temp/finished.mp4")
+        try:
+            os.remove("./main/main.mp4")
+            os.remove("./temp/finished.mp4")
+        except FileNotFoundError:
+            pass
 
-
-# TESTING
-def storeimage(image):
-    image.save("./temp/finished.jpg")
+# function to save final blurred file
+def savefile(filetype):
+    # file type validation, if main file is image these lines of code will execute
+    if filetype == 'photo':
+        location = asksaveasfilename(defaultextension=".jpg")
+        shutil.copy('./temp/finished.jpg', location)
+    # file type validation, if main file is a video these lines of code will execute
+    else:
+        location = asksaveasfilename(defaultextension=".mp4")
+        shutil.copy('./temp/finished.mp4', location)
